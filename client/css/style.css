@@ -1,0 +1,18 @@
+ul {
+   list-style-type: none;
+}
+
+.col-centered{
+    float: none;
+    margin: 0 auto;
+}
+
+.mobile-links {
+    display: none;
+}
+
+@media only screen and (max-device-width: 1024px) {
+    .mobile-links {
+        display: inline;
+    }
+}

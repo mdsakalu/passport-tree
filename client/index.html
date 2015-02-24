@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Passport Tree</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<link href="css/business-casual.css" rel="stylesheet">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+	<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Josefin+Slab:100,300,400,600,700,100italic,300italic,400italic,600italic,700italic" rel="stylesheet" type="text/css">
+
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/validator.min.js"></script>
+	<script type="text/javascript" src="js/knockout-3.3.0.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/socket.io-1.3.4.js"></script>
+	<script type="text/javascript" src="js/viewModel.js"></script>
+
+	<script type="text/html" id="factory-template">
+		<li>
+			<div data-bind="click: toggle, event: {contextmenu: rightclick}" style="display:inline;">
+				<span class="fa fa-folder-open" data-bind="visible: expanded"></span>
+				<span class="fa fa-folder" data-bind="visible: !expanded()"></span>
+				<span data-bind="text: displayName"></span>
+			</div>
+			<div class="mobile-links">
+				<a href="#" data-bind="click: edit"><span class="fa fa-pencil"></span></a>
+				<a href="#" data-bind="click: showGenerate"><span class="fa fa-random"></span></a>
+				<a href="#" data-bind="click: deleteFactory"><span class="fa fa-trash-o"></span></a>
+			</div>
+			
+			<div data-bind="if: expanded">
+				<ul class="node" data-bind="foreach: nodes">
+					<li>
+					<span class="fa fa-file-o"></span>
+					<span data-bind="text: $data"></span>
+					</li>
+				</ul>
+			</div>
+		</li>
+	</script>
+
+</head>
+
+<body>
+	<div class="brand">Passport Tree</div>
+	
+	 <div class="container">
+        <div class="row">
+            <div class="box col-md-6 col-sm-8 col-xs-12 col-centered">
+                <div class="">
+					<ul>
+						<li>
+							<div data-bind="click: toggle, event: {contextmenu: rightclick}" style="display: inline;">
+								<span class="fa fa-folder-open" data-bind="visible: expanded"></span>
+								<span class="fa fa-folder" data-bind="visible: !expanded()"></span>
+								<span> Root</span>
+							</div>
+							<div class="mobile-links">
+								<a href="#" data-bind="click: create"><span class="fa fa-plus"></span></a>
+							</div>
+							<div data-bind="if: expanded">
+								<ul data-bind="template: {name: 'factory-template', foreach: factories}"></ul>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="lockAlert" class="modal fade" style="display:none" >
+		<div class="modal-dialog modal-content modal-body col-centered">
+	    		<span class="fa fa-exclamation-triangle"></span> This factory is locked by another user.
+	    		<a href="#" class="close" data-bind="click: closeAlert">&times;</a>
+	    </div>
+	</div>
+
+	<!-- ko doNotBind: true -->
+	<ul id="rootContextMenu" class="dropdown-menu" role="menu" style="display:none">
+		<li>
+			<a href="#" data-bind="click: create"><span class="fa fa-plus"></span> Create factory</a>
+		</li>
+	</ul>
+	
+	<ul id="factoryContextMenu" class="dropdown-menu" role="menu" style="display:none">
+		<li>
+			<a href="#" data-bind="click: edit"><span class="fa fa-pencil"></span> Edit details</a>
+		</li>
+		<li>
+			<a href="#" data-bind="click: showGenerate"><span class="fa fa-random"></span> Generate nodes</a>
+		</li>
+		<li>
+			<a href="#" data-bind="click: deleteFactory"><span class="fa fa-trash-o"></span> Delete factory</a>
+		</li>
+	</ul>
+
+	<div class="container"><div class="row"><div class="col-lg-10">
+	<div id="generateModal" class="modal fade" style="display:none">
+		<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-bind="click:closeGenerate">&times;</button>
+				<h4 class="modal-title">Generate nodes</h4>
+			</div>
+			<form id="generatorForm" class="form-horizontal" role="form">
+				<div class="modal-body">
+					
+						<div class="form-group">
+							<label class="control-label col-sm-3">How many?</label>
+							<div class="col-sm-3">
+							<input required autofocus type="number" min="1" max="15" class="form-control" data-bind="value: generateModal.num" />
+							</div>
+						</div>
+					
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-bind="click: closeGenerate">Close</button>
+					<button type="submit" class="btn btn-primary" >Generate</button>
+				</div>
+			</form>
+		</div>
+		</div>
+	</div>
+
+	<div id="editModal" class="modal fade" style="display:none">
+		<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-bind="click:closeEdit">&times;</button>
+				<h4 class="modal-title"><span data-bind="text: editModal.title"></span></h4>
+			</div>
+			<form id="editForm" class="form-horizontal" role="form">
+				<div class="modal-body">
+						<div class="form-group">
+							<label class="control-label col-sm-2">Name</label>
+							<div class="col-sm-9">
+							<input required type="text" class="form-control" data-bind="value: editModal.name" />
+							</div>
+						</div>
+						<div class="form-group form">
+							<label class="control-label col-sm-2">Child min</label>
+							<div class="col-sm-3">
+							<input required type="number" class="form-control" data-bind="value: editModal.min" />
+							</div>
+							<label class="control-label col-sm-2">Child max</label>
+							<div class="col-sm-3">
+							<input required type="number" class="form-control" data-bind="value: editModal.max" />
+							</div>
+						</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-bind="click: closeEdit">Close</button>
+					<button type="submit" class="btn btn-primary">Save changes</button>
+				</div>
+			</form>
+		</div>
+		</div>
+	</div>
+	
+	<div id="deleteModal" class="modal fade" style="display:none">
+		<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-bind="click:closeDelete">&times;</button>
+				<h4 class="modal-title">Are you sure you want to delete <span data-bind="text: name"></span>?</h4>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-bind="click: closeDelete">Close</button>
+				<button type="button" class="btn btn-primary" data-bind="click: confirmDelete">Delete</button>
+			</div>
+		</div>
+		</div>
+	</div>
+	
+	</div></div></div>
+	<!-- /ko -->
+</body>
+
+</html>
