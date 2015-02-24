@@ -5,7 +5,6 @@ var io = require('socket.io')(http);
 var v = require('validator');
 var mongo = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
-var Q = require('q');
 
 var db;
 
