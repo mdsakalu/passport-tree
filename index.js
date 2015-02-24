@@ -212,15 +212,17 @@ io.on('connection', function(socket) {
 
 
 // default to a 'localhost' configuration:
-var connection_string = '127.0.0.1:27017/passport-tree';
+var connection_string = 'mongodb://127.0.0.1:27017/passport-tree';
 // if OPENSHIFT env variables are present, use the available connection info:
 if(process.env.OPENSHIFT_MONGODB_DB_PASSWORD){
-  connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
+  connection_string = "mongodb://" + process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
   process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
   process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
   process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
   process.env.OPENSHIFT_APP_NAME;
 }
+
+console.log("connecting to db: "+connection_string);
 
 mongo.connect(connection_string, function(err, database) {
   if (err) throw err;
@@ -234,6 +236,6 @@ mongo.connect(connection_string, function(err, database) {
   var ip_addr = process.env.OPENSHIFT_NODEJS_IP   || process.env.IP || "0.0.0.0";
   var port    = process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 3000;
   http.listen(port, ip_addr, function() {
-    console.log('listening on *:' + process.env.PORT || 3000);
+    console.log('listening on '+ip_addr+':' + port);
   });
 });
